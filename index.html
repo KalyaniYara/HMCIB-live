@@ -783,130 +783,125 @@
       errorBox.textContent = "";
       errorBox.style.display = "none";
     }
-    document.addEventListener("modelcontextchange", async () => {
+  document.addEventListener("modelcontextchange", async () => {
 
-  if (!document.modelContext) {
-    console.error("ModelContext unavailable");
-    return;
-  }
+    console.log("modelcontextchange fired");
 
-
-    await document.modelContext.registerTool({
-  name: "calculateMortgageBorrowing",
-  description: "Calculate estimated mortgage borrowing amount for a first time buyer",
-
-  inputSchema: {
-    type: "object",
-    properties: {
-      numberOfApplicants: {
-        type: "number",
-        description: "1 or 2 applicants"
-      },
-
-      annualIncome: {
-        type: "number",
-        description: "Primary applicant annual income"
-      },
-
-      secondApplicantIncome: {
-        type: "number",
-        description: "Second applicant annual income"
-      },
-
-      numberOfDependants: {
-        type: "number",
-        description: "Number of dependants"
-      },
-
-      monthlyLoanRepayments: {
-        type: "number",
-        description: "Monthly loan repayments"
-      },
-
-      creditCardBalance: {
-        type: "number",
-        description: "Outstanding credit card balance"
-      },
-
-      monthlyExpenditure: {
-        type: "number",
-        description: "Monthly expenditure"
-      },
-
-      depositAmount: {
-        type: "number",
-        description: "Available deposit"
-      },
-
-      mortgageTerm: {
-        type: "number",
-        description: "Mortgage term in years"
-      }
-    },
-
-    required: [
-      "numberOfApplicants",
-      "annualIncome",
-      "numberOfDependants",
-      "monthlyLoanRepayments",
-      "monthlyExpenditure",
-      "depositAmount",
-      "mortgageTerm"
-    ]
-  },
-
-  execute: async (args) => {
-
-    const totalIncome =
-      Number(args.annualIncome || 0) +
-      Number(args.secondApplicantIncome || 0);
-
-    const commitments =
-      Number(args.monthlyLoanRepayments || 0) +
-      Number(args.monthlyExpenditure || 0) +
-      (Number(args.creditCardBalance || 0) * 0.03);
-
-    const dependantReduction =
-      Number(args.numberOfDependants || 0) * 12000;
-
-    const baseBorrowing = totalIncome * 4.5;
-
-    const commitmentReduction =
-      commitments * 12 * 3;
-
-    let estimatedBorrowing =
-      baseBorrowing -
-      commitmentReduction -
-      dependantReduction;
-
-    if (estimatedBorrowing < 0) {
-      estimatedBorrowing = 0;
+    if (!document.modelContext) {
+        console.error("document.modelContext not found");
+        return;
     }
 
-    const propertyBudget =
-      estimatedBorrowing +
-      Number(args.depositAmount || 0);
+    try {
 
-    return {
-      content: [{
-        type: "text",
-        text: JSON.stringify({
-          estimatedBorrowing: Math.round(estimatedBorrowing),
-          propertyBudget: Math.round(propertyBudget),
-          applicants: args.numberOfApplicants,
-          totalIncome,
-          depositAmount: args.depositAmount,
-          mortgageTerm: args.mortgageTerm
-        })
-      }]
-    };
-  }
-});
-  
+        await document.modelContext.registerTool({
+            name: "mortgagecalculator",
 
-  console.log(
-    await document.modelContext.getTools()
-  );
+            description: "Calculate mortgage borrowing amount",
+
+            inputSchema: {
+                type: "object",
+                properties: {
+                    numberOfApplicants: {
+                        type: "number"
+                    },
+                    annualIncome: {
+                        type: "number"
+                    },
+                    secondApplicantIncome: {
+                        type: "number"
+                    },
+                    numberOfDependants: {
+                        type: "number"
+                    },
+                    monthlyLoanRepayments: {
+                        type: "number"
+                    },
+                    creditCardBalance: {
+                        type: "number"
+                    },
+                    monthlyExpenditure: {
+                        type: "number"
+                    },
+                    depositAmount: {
+                        type: "number"
+                    },
+                    mortgageTerm: {
+                        type: "number"
+                    }
+                },
+                required: [
+                    "numberOfApplicants",
+                    "annualIncome",
+                    "numberOfDependants",
+                    "monthlyLoanRepayments",
+                    "monthlyExpenditure",
+                    "depositAmount",
+                    "mortgageTerm"
+                ]
+            },
+
+            execute: async (args) => {
+
+                console.log("Tool executed", args);
+
+                const totalIncome =
+                    Number(args.annualIncome || 0) +
+                    Number(args.secondApplicantIncome || 0);
+
+                const commitments =
+                    Number(args.monthlyLoanRepayments || 0) +
+                    Number(args.monthlyExpenditure || 0) +
+                    (Number(args.creditCardBalance || 0) * 0.03);
+
+                const dependantReduction =
+                    Number(args.numberOfDependants || 0) * 12000;
+
+                const baseBorrowing =
+                    totalIncome * 4.5;
+
+                const commitmentReduction =
+                    commitments * 12 * 3;
+
+                let estimatedBorrowing =
+                    baseBorrowing -
+                    commitmentReduction -
+                    dependantReduction;
+
+                if (estimatedBorrowing < 0) {
+                    estimatedBorrowing = 0;
+                }
+
+                const propertyBudget =
+                    estimatedBorrowing +
+                    Number(args.depositAmount || 0);
+
+                // IMPORTANT:
+                // Return plain JSON first
+                return {
+                    estimatedBorrowing: Math.round(estimatedBorrowing),
+                    propertyBudget: Math.round(propertyBudget),
+                    applicants: args.numberOfApplicants,
+                    totalIncome: totalIncome,
+                    mortgageTerm: args.mortgageTerm
+                };
+            }
+        });
+
+        console.log("Tool registered successfully");
+
+        const tools =
+            await document.modelContext.getTools();
+
+        console.log("Available tools:", tools);
+
+    } catch (error) {
+
+        console.error(
+            "Tool registration failed:",
+            error
+        );
+    }
 });
   </script>
 </body>
