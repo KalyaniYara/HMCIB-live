@@ -545,364 +545,434 @@
     </div>
   </section>
 
-  <script>
-    let currentStep = 1;
+ <script>
+  let currentStep = 1;
+  let mortgageToolRegistered = false;
 
-    document.addEventListener("DOMContentLoaded", function () {
-      loadTermOptions();
+  document.addEventListener("DOMContentLoaded", function () {
+    loadTermOptions();
+
+    // ✅ FIX: Register WebMCP tool directly after page load
+    registerMortgageToolWhenReady();
+  });
+
+  function loadTermOptions() {
+    const termSelect = document.getElementById("term");
+    termSelect.innerHTML = "";
+
+    for (let year = 3; year <= 48; year++) {
+      const option = document.createElement("option");
+      option.value = year;
+      option.textContent = year + " years";
+
+      if (year === 25) {
+        option.selected = true;
+      }
+
+      termSelect.appendChild(option);
+    }
+  }
+
+  function startCalculator() {
+    document.getElementById("landingPage").classList.remove("active");
+    document.getElementById("calculatorPage").classList.add("active");
+    showStep(1);
+  }
+
+  function goLanding() {
+    document.getElementById("calculatorPage").classList.remove("active");
+    document.getElementById("landingPage").classList.add("active");
+    hideError();
+  }
+
+  function toggleApplicantTwo() {
+    const applicants = document.querySelector('input[name="applicants"]:checked').value;
+    const applicantTwoIncome = document.getElementById("applicantTwoIncome");
+
+    if (applicants === "2") {
+      applicantTwoIncome.classList.remove("hidden");
+    } else {
+      applicantTwoIncome.classList.add("hidden");
+      document.getElementById("income2").value = "";
+    }
+  }
+
+  function showStep(stepNumber) {
+    currentStep = stepNumber;
+
+    document.querySelectorAll(".step").forEach(function (step) {
+      step.classList.remove("active");
     });
 
-    function loadTermOptions() {
-      const termSelect = document.getElementById("term");
-      termSelect.innerHTML = "";
+    document.getElementById("step" + stepNumber).classList.add("active");
 
-      for (let year = 3; year <= 48; year++) {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year + (year === 1 ? " year" : " years");
+    for (let i = 1; i <= 3; i++) {
+      const progress = document.getElementById("progress" + i);
 
-        if (year === 25) {
-          option.selected = true;
-        }
-
-        termSelect.appendChild(option);
-      }
-    }
-
-    function startCalculator() {
-      document.getElementById("landingPage").classList.remove("active");
-      document.getElementById("calculatorPage").classList.add("active");
-      showStep(1);
-    }
-
-    function goLanding() {
-      document.getElementById("calculatorPage").classList.remove("active");
-      document.getElementById("landingPage").classList.add("active");
-      hideError();
-    }
-
-    function toggleApplicantTwo() {
-      const applicants = document.querySelector('input[name="applicants"]:checked').value;
-      const applicantTwoIncome = document.getElementById("applicantTwoIncome");
-
-      if (applicants === "2") {
-        applicantTwoIncome.classList.remove("hidden");
+      if (i <= stepNumber) {
+        progress.classList.add("active");
       } else {
-        applicantTwoIncome.classList.add("hidden");
-        document.getElementById("income2").value = "";
+        progress.classList.remove("active");
       }
     }
 
-    function showStep(stepNumber) {
-      currentStep = stepNumber;
+    hideError();
+  }
 
-      document.querySelectorAll(".step").forEach(step => {
-        step.classList.remove("active");
-      });
-
-      document.getElementById("step" + stepNumber).classList.add("active");
-
-      for (let i = 1; i <= 3; i++) {
-        const progress = document.getElementById("progress" + i);
-        if (i <= stepNumber) {
-          progress.classList.add("active");
-        } else {
-          progress.classList.remove("active");
-        }
-      }
-
-      hideError();
+  function nextStep(stepNumber) {
+    if (!validateStep(stepNumber)) {
+      return;
     }
 
-    function nextStep(stepNumber) {
-      if (!validateStep(stepNumber)) {
-        return;
-      }
+    showStep(stepNumber + 1);
+  }
 
-      showStep(stepNumber + 1);
-    }
+  function previousStep(stepNumber) {
+    showStep(stepNumber - 1);
+  }
 
-    function previousStep(stepNumber) {
-      showStep(stepNumber - 1);
-    }
+  function validateStep(stepNumber) {
+    hideError();
 
-    function validateStep(stepNumber) {
-      hideError();
-
-      if (stepNumber === 1) {
-        const applicants = document.querySelector('input[name="applicants"]:checked').value;
-        const income1 = getNumber("income1");
-        const income2 = getNumber("income2");
-        const dependants = getNumber("dependants");
-
-        if (income1 <= 0) {
-          showError("Please enter your annual income.");
-          return false;
-        }
-
-        if (applicants === "2" && income2 <= 0) {
-          showError("Please enter the second applicant annual income.");
-          return false;
-        }
-
-        if (dependants < 0) {
-          showError("Dependants cannot be negative.");
-          return false;
-        }
-      }
-
-      if (stepNumber === 2) {
-        const loanRepayments = getNumber("loanRepayments");
-        const creditCards = getNumber("creditCards");
-        const monthlyExpenditure = getNumber("monthlyExpenditure");
-
-        if (loanRepayments < 0 || creditCards < 0 || monthlyExpenditure < 0) {
-          showError("Monthly commitments cannot be negative.");
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    function calculateResult() {
-      hideError();
-
-      const deposit = getNumber("deposit");
-      const term = getNumber("term");
-
-      if (deposit <= 0) {
-        showError("Please enter your deposit amount.");
-        return;
-      }
-
-      if (term < 3 || term > 48) {
-        showError("Please select a mortgage term between 3 and 48 years.");
-        return;
-      }
-
+    if (stepNumber === 1) {
       const applicants = document.querySelector('input[name="applicants"]:checked').value;
       const income1 = getNumber("income1");
-      const income2 = applicants === "2" ? getNumber("income2") : 0;
+      const income2 = getNumber("income2");
       const dependants = getNumber("dependants");
 
+      if (income1 <= 0) {
+        showError("Please enter your annual income.");
+        return false;
+      }
+
+      if (applicants === "2" && income2 <= 0) {
+        showError("Please enter the second applicant annual income.");
+        return false;
+      }
+
+      if (dependants < 0) {
+        showError("Dependants cannot be negative.");
+        return false;
+      }
+    }
+
+    if (stepNumber === 2) {
       const loanRepayments = getNumber("loanRepayments");
       const creditCards = getNumber("creditCards");
       const monthlyExpenditure = getNumber("monthlyExpenditure");
 
-      const totalIncome = income1 + income2;
-      const totalMonthlyCommitments = loanRepayments + monthlyExpenditure + (creditCards * 0.03);
-
-      /*
-        Sample estimate logic:
-        - Base borrowing = income x 4.5
-        - Reduce borrowing based on commitments and dependants
-        - This is only indicative, not a lender decision engine
-      */
-      const baseBorrowing = totalIncome * 4.5;
-      const commitmentReduction = totalMonthlyCommitments * 12 * 3;
-      const dependantReduction = dependants * 12000;
-
-      let estimatedBorrowing = baseBorrowing - commitmentReduction - dependantReduction;
-
-      if (estimatedBorrowing < 0) {
-        estimatedBorrowing = 0;
+      if (loanRepayments < 0 || creditCards < 0 || monthlyExpenditure < 0) {
+        showError("Monthly commitments cannot be negative.");
+        return false;
       }
-
-      const propertyBudget = estimatedBorrowing + deposit;
-
-      /*
-        Monthly repayment estimate using fixed sample annual rate.
-        You can change this value later or make it dynamic.
-      */
-      const annualInterestRate = 5.25;
-      const monthlyRate = annualInterestRate / 100 / 12;
-      const numberOfPayments = term * 12;
-
-      let monthlyPayment = 0;
-
-      if (estimatedBorrowing > 0) {
-        monthlyPayment =
-          estimatedBorrowing *
-          (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
-          (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
-      }
-
-      document.getElementById("borrowAmount").textContent = formatCurrency(estimatedBorrowing);
-      document.getElementById("propertyBudget").textContent = formatCurrency(propertyBudget);
-      document.getElementById("monthlyPayment").textContent = formatCurrency(monthlyPayment);
-
-      document.getElementById("calculatorPage").classList.remove("active");
-      document.getElementById("resultsPage").classList.add("active");
     }
 
-    function editDetails() {
-      document.getElementById("resultsPage").classList.remove("active");
-      document.getElementById("calculatorPage").classList.add("active");
-      showStep(3);
+    return true;
+  }
+
+  function calculateResult() {
+    hideError();
+
+    const deposit = getNumber("deposit");
+    const term = getNumber("term");
+
+    if (deposit <= 0) {
+      showError("Please enter your deposit amount.");
+      return;
     }
 
-    function restartTool() {
-      document.querySelectorAll("input[type='number']").forEach(input => {
-        input.value = "";
-      });
-
-      document.querySelector('input[name="applicants"][value="1"]').checked = true;
-      toggleApplicantTwo();
-      loadTermOptions();
-
-      document.getElementById("resultsPage").classList.remove("active");
-      document.getElementById("landingPage").classList.add("active");
-
-      currentStep = 1;
-      hideError();
+    if (term < 3 || term > 48) {
+      showError("Please select a mortgage term between 3 and 48 years.");
+      return;
     }
 
-    function getNumber(id) {
-      const value = document.getElementById(id).value;
-      return value === "" ? 0 : Number(value);
+    const applicants = document.querySelector('input[name="applicants"]:checked').value;
+
+    const args = {
+      numberOfApplicants: Number(applicants),
+      annualIncome: getNumber("income1"),
+      secondApplicantIncome: applicants === "2" ? getNumber("income2") : 0,
+      numberOfDependants: getNumber("dependants"),
+      monthlyLoanRepayments: getNumber("loanRepayments"),
+      creditCardBalance: getNumber("creditCards"),
+      monthlyExpenditure: getNumber("monthlyExpenditure"),
+      depositAmount: getNumber("deposit"),
+      mortgageTerm: getNumber("term")
+    };
+
+    const result = calculateMortgageBorrowing(args);
+
+    document.getElementById("borrowAmount").textContent =
+      formatCurrency(result.estimatedBorrowing);
+
+    document.getElementById("propertyBudget").textContent =
+      formatCurrency(result.propertyBudget);
+
+    document.getElementById("monthlyPayment").textContent =
+      formatCurrency(result.monthlyPayment);
+
+    document.getElementById("calculatorPage").classList.remove("active");
+    document.getElementById("resultsPage").classList.add("active");
+  }
+
+  // ✅ Shared calculation function used by UI and WebMCP tool
+  function calculateMortgageBorrowing(args) {
+    const totalIncome =
+      Number(args.annualIncome || 0) +
+      Number(args.secondApplicantIncome || 0);
+
+    const commitments =
+      Number(args.monthlyLoanRepayments || 0) +
+      Number(args.monthlyExpenditure || 0) +
+      Number(args.creditCardBalance || 0) * 0.03;
+
+    const dependantReduction =
+      Number(args.numberOfDependants || 0) * 12000;
+
+    const baseBorrowing =
+      totalIncome * 4.5;
+
+    const commitmentReduction =
+      commitments * 12 * 3;
+
+    let estimatedBorrowing =
+      baseBorrowing -
+      commitmentReduction -
+      dependantReduction;
+
+    if (estimatedBorrowing < 0) {
+      estimatedBorrowing = 0;
     }
 
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat("en-GB", {
-        style: "currency",
-        currency: "GBP",
-        maximumFractionDigits: 0
-      }).format(amount);
+    const propertyBudget =
+      estimatedBorrowing +
+      Number(args.depositAmount || 0);
+
+    const annualInterestRate = 5.25;
+    const monthlyRate = annualInterestRate / 100 / 12;
+    const numberOfPayments = Number(args.mortgageTerm || 25) * 12;
+
+    let monthlyPayment = 0;
+
+    if (estimatedBorrowing > 0) {
+      monthlyPayment =
+        estimatedBorrowing *
+        (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+        (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
     }
 
-    function showError(message) {
-      const errorBox = document.getElementById("errorMessage");
-      errorBox.textContent = message;
-      errorBox.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    return {
+      estimatedBorrowing: Math.round(estimatedBorrowing),
+      propertyBudget: Math.round(propertyBudget),
+      monthlyPayment: Math.round(monthlyPayment),
+      totalIncome: Math.round(totalIncome),
+      mortgageTerm: Number(args.mortgageTerm || 25),
+      applicants: Number(args.numberOfApplicants || 1)
+    };
+  }
 
-    function hideError() {
-      const errorBox = document.getElementById("errorMessage");
-      errorBox.textContent = "";
-      errorBox.style.display = "none";
-    }
-  document.addEventListener("modelcontextchange", async () => {
+  function editDetails() {
+    document.getElementById("resultsPage").classList.remove("active");
+    document.getElementById("calculatorPage").classList.add("active");
+    showStep(3);
+  }
 
-    console.log("modelcontextchange fired");
+  function restartTool() {
+    document.querySelectorAll("input[type='number']").forEach(function (input) {
+      input.value = "";
+    });
+
+    document.querySelector('input[name="applicants"][value="1"]').checked = true;
+    toggleApplicantTwo();
+    loadTermOptions();
+
+    document.getElementById("resultsPage").classList.remove("active");
+    document.getElementById("landingPage").classList.add("active");
+
+    currentStep = 1;
+    hideError();
+  }
+
+  function getNumber(id) {
+    const value = document.getElementById(id).value;
+    return value === "" ? 0 : Number(value);
+  }
+
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: "GBP",
+      maximumFractionDigits: 0
+    }).format(amount);
+  }
+
+  function showError(message) {
+    const errorBox = document.getElementById("errorMessage");
+    errorBox.textContent = message;
+    errorBox.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function hideError() {
+    const errorBox = document.getElementById("errorMessage");
+    errorBox.textContent = "";
+    errorBox.style.display = "none";
+  }
+
+  // ==========================================================
+  // ✅ WEBMCP TOOL REGISTRATION - FIXED VERSION
+  // ==========================================================
+
+  function registerMortgageToolWhenReady() {
+    console.log("Checking WebMCP modelContext...");
 
     if (!document.modelContext) {
-        console.error("document.modelContext not found");
-        return;
+      console.log("modelContext not ready, retrying...");
+      setTimeout(registerMortgageToolWhenReady, 500);
+      return;
     }
 
+    if (mortgageToolRegistered) {
+      console.log("Mortgage tool already registered");
+      return;
+    }
+
+    if (typeof document.modelContext.registerTool !== "function") {
+      console.error("registerTool function not found on document.modelContext");
+      return;
+    }
+
+    registerMortgageTool();
+  }
+
+  async function registerMortgageTool() {
     try {
+      console.log("Registering mortgagecalculator tool...");
 
-        await document.modelContext.registerTool({
-            name: "mortgagecalculator",
+      // ✅ Optional: listen for tool changes
+      document.modelContext.ontoolchange = function () {
+        console.log("WebMCP tools changed");
+      };
 
-            description: "Calculate mortgage borrowing amount",
+      await document.modelContext.registerTool({
+        name: "mortgagecalculator",
+        description: "Calculate estimated mortgage borrowing amount for a first time buyer",
 
-            inputSchema: {
-                type: "object",
-                properties: {
-                    numberOfApplicants: {
-                        type: "number"
-                    },
-                    annualIncome: {
-                        type: "number"
-                    },
-                    secondApplicantIncome: {
-                        type: "number"
-                    },
-                    numberOfDependants: {
-                        type: "number"
-                    },
-                    monthlyLoanRepayments: {
-                        type: "number"
-                    },
-                    creditCardBalance: {
-                        type: "number"
-                    },
-                    monthlyExpenditure: {
-                        type: "number"
-                    },
-                    depositAmount: {
-                        type: "number"
-                    },
-                    mortgageTerm: {
-                        type: "number"
-                    }
-                },
-                required: [
-                    "numberOfApplicants",
-                    "annualIncome",
-                    "numberOfDependants",
-                    "monthlyLoanRepayments",
-                    "monthlyExpenditure",
-                    "depositAmount",
-                    "mortgageTerm"
-                ]
+        inputSchema: {
+          type: "object",
+          properties: {
+            numberOfApplicants: {
+              type: "number",
+              description: "Number of applicants. Use 1 or 2."
             },
-
-            execute: async (args) => {
-
-                console.log("Tool executed", args);
-
-                const totalIncome =
-                    Number(args.annualIncome || 0) +
-                    Number(args.secondApplicantIncome || 0);
-
-                const commitments =
-                    Number(args.monthlyLoanRepayments || 0) +
-                    Number(args.monthlyExpenditure || 0) +
-                    (Number(args.creditCardBalance || 0) * 0.03);
-
-                const dependantReduction =
-                    Number(args.numberOfDependants || 0) * 12000;
-
-                const baseBorrowing =
-                    totalIncome * 4.5;
-
-                const commitmentReduction =
-                    commitments * 12 * 3;
-
-                let estimatedBorrowing =
-                    baseBorrowing -
-                    commitmentReduction -
-                    dependantReduction;
-
-                if (estimatedBorrowing < 0) {
-                    estimatedBorrowing = 0;
-                }
-
-                const propertyBudget =
-                    estimatedBorrowing +
-                    Number(args.depositAmount || 0);
-
-                // IMPORTANT:
-                // Return plain JSON first
-                return {
-                    estimatedBorrowing: Math.round(estimatedBorrowing),
-                    propertyBudget: Math.round(propertyBudget),
-                    applicants: args.numberOfApplicants,
-                    totalIncome: totalIncome,
-                    mortgageTerm: args.mortgageTerm
-                };
+            annualIncome: {
+              type: "number",
+              description: "Primary applicant annual income before tax."
+            },
+            secondApplicantIncome: {
+              type: "number",
+              description: "Second applicant annual income before tax. Use 0 if not applicable."
+            },
+            numberOfDependants: {
+              type: "number",
+              description: "Number of dependants financially supported."
+            },
+            monthlyLoanRepayments: {
+              type: "number",
+              description: "Total monthly loan repayments."
+            },
+            creditCardBalance: {
+              type: "number",
+              description: "Outstanding credit card balance."
+            },
+            monthlyExpenditure: {
+              type: "number",
+              description: "Other monthly expenditure."
+            },
+            depositAmount: {
+              type: "number",
+              description: "Available deposit amount."
+            },
+            mortgageTerm: {
+              type: "number",
+              description: "Mortgage term in years from 3 to 48."
             }
-        });
+          },
+          required: [
+            "numberOfApplicants",
+            "annualIncome",
+            "numberOfDependants",
+            "monthlyLoanRepayments",
+            "monthlyExpenditure",
+            "depositAmount",
+            "mortgageTerm"
+          ]
+        },
 
-        console.log("Tool registered successfully");
+        // ✅ FIX: using normal async function instead of arrow function
+        execute: async function (args) {
+          console.log("mortgagecalculator executed with args:", args);
 
-        const tools =
-            await document.modelContext.getTools();
+          const result = calculateMortgageBorrowing(args);
 
-        console.log("Available tools:", tools);
+          // ✅ Return plain JSON object
+          return {
+            estimatedBorrowing: result.estimatedBorrowing,
+            propertyBudget: result.propertyBudget,
+            monthlyPayment: result.monthlyPayment,
+            totalIncome: result.totalIncome,
+            applicants: result.applicants,
+            mortgageTerm: result.mortgageTerm,
+            message:
+              "Estimated borrowing amount is " +
+              formatCurrency(result.estimatedBorrowing) +
+              ". Estimated property budget is " +
+              formatCurrency(result.propertyBudget) +
+              ". Estimated monthly repayment is " +
+              formatCurrency(result.monthlyPayment) +
+              "."
+          };
+        }
+      });
+
+      mortgageToolRegistered = true;
+
+      console.log("✅ mortgagecalculator tool registered successfully");
+
+      const tools = await document.modelContext.getTools();
+      console.log("✅ Available WebMCP tools:", tools);
 
     } catch (error) {
-
-        console.error(
-            "Tool registration failed:",
-            error
-        );
+      console.error("❌ Tool registration failed:", error);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
     }
-});
-  </script>
+  }
+
+  // ✅ Manual test function for console
+  // Run this in console after page load:
+  // testMortgageTool()
+  async function testMortgageTool() {
+    try {
+      const result = await document.modelContext.executeTool("mortgagecalculator", {
+        numberOfApplicants: 1,
+        annualIncome: 50000,
+        secondApplicantIncome: 0,
+        numberOfDependants: 0,
+        monthlyLoanRepayments: 200,
+        creditCardBalance: 1000,
+        monthlyExpenditure: 300,
+        depositAmount: 25000,
+        mortgageTerm: 25
+      });
+
+      console.log("Tool test result:", result);
+      return result;
+
+    } catch (error) {
+      console.error("Tool test failed:", error);
+    }
+  }
+</script>
 </body>
 </html>
