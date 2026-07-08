@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mortgage Borrowing Calculator</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #f4f1f8;
+      color: #1f1235;
+      min-height: 100vh;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100vh;
+      display: none;
+      padding: 40px 20px;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #42145f, #7d2a8c);
+      color: #fff;
+      padding: 55px 40px;
+      border-radius: 24px;
+      box-shadow: 0 18px 45px rgba(66, 20, 95, 0.25);
+      margin-bottom: 35px;
+    }
+
+    .hero h1 {
+      font-size: 42px;
+      line-height: 1.2;
+      margin-bottom: 18px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      max-width: 680px;
+      line-height: 1.6;
+      opacity: 0.95;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(31, 18, 53, 0.1);
+      border: 2px solid transparent;
+      transition: 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #7d2a8c;
+    }
+
+    .card h2 {
+      font-size: 22px;
+      margin-bottom: 12px;
+      color: #42145f;
+    }
+
+    .card p {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #50425f;
+      margin-bottom: 22px;
+    }
+
+    .btn {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 14px 24px;
+      font-weight: 700;
+      font-size: 15px;
+      transition: 0.25s ease;
+    }
+
+    .btn-primary {
+      background: #42145f;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #2d0d43;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: #42145f;
+      border: 2px solid #42145f;
+    }
+
+    .btn-secondary:hover {
+      background: #f1e8f7;
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      margin-top: 30px;
+    }
+
+    .form-shell {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 14px 40px rgba(31, 18, 53, 0.12);
+      overflow: hidden;
+    }
+
+    .form-header {
+      background: #42145f;
+      color: #fff;
+      padding: 32px;
+    }
+
+    .form-header h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .form-header p {
+      opacity: 0.92;
+      line-height: 1.5;
+    }
+
+    .progress {
+      display: flex;
+      background: #f6f0fa;
+      padding: 18px 32px;
+      gap: 12px;
+    }
+
+    .progress-step {
+      flex: 1;
+      height: 8px;
+      background: #ddd0e8;
+      border-radius: 99px;
+    }
+
+    .progress-step.active {
+      background: #42145f;
+    }
+
+    .form-body {
+      padding: 35px 32px;
+    }
+
+    .step {
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+    }
+
+    .step h2 {
+      font-size: 26px;
+      color: #42145f;
+      margin-bottom: 10px;
+    }
+
+    .step-desc {
+      color: #5d5068;
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #2b193d;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 12px;
+      border: 1.5px solid #cfc2db;
+      font-size: 16px;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #42145f;
+      box-shadow: 0 0 0 3px rgba(66, 20, 95, 0.12);
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 18px;
+      margin-top: 8px;
+    }
+
+    .radio-card {
+      flex: 1;
+      border: 2px solid #d7c9e4;
+      border-radius: 16px;
+      padding: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+    }
+
+    .radio-card input {
+      width: auto;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: #675a70;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      background: #fff0f0;
+      color: #a30000;
+      border-left: 5px solid #c90000;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      line-height: 1.4;
+    }
+
+    .result-card {
+      background: #fff;
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 14px 40px rgba(31, 18, 53, 0.12);
+    }
+
+    .result-title {
+      color: #42145f;
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+
+    .result-summary {
+      font-size: 17px;
+      color: #5b4d64;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 30px;
+    }
+
+    .result-box {
+      background: #f6f0fa;
+      border-radius: 18px;
+      padding: 24px;
+    }
+
+    .result-box span {
+      display: block;
+      font-size: 14px;
+      color: #62546c;
+      margin-bottom: 8px;
+    }
+
+    .result-box strong {
+      color: #42145f;
+      font-size: 26px;
+    }
+
+    .notice {
+      background: #fff8e5;
+      border-left: 5px solid #f0b400;
+      padding: 18px;
+      border-radius: 12px;
+      line-height: 1.5;
+      color: #4c3d12;
+      margin-bottom: 26px;
+    }
+
+    @media (max-width: 800px) {
+      .cards,
+      .form-grid,
+      .result-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 32px;
+      }
+
+      .btn-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Landing Page -->
+  <section id="landingPage" class="page active">
+    <div class="container">
+      <div class="hero">
+        <h1>How much could I borrow for a mortgage?</h1>
+        <p>
+          Use this tool to get an estimated borrowing amount based on your income,
+          deposit, monthly commitments and preferred mortgage term.
+        </p>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <h2>First time buyer</h2>
+          <p>You want to buy your first ever home to live in.</p>
+          <button class="btn btn-primary" onclick="startCalculator()">I’m a first time buyer</button>
+        </div>
+
+        <div class="card">
+          <h2>Moving home</h2>
+          <p>You already own your home and want to buy a new one.</p>
+          <button class="btn btn-secondary" disabled>Coming soon</button>
+        </div>
+
+        <div class="card">
+          <h2>Remortgage</h2>
+          <p>You already have a mortgage and want to explore remortgaging.</p>
+          <button class="btn btn-secondary" disabled>Coming soon</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calculator Page -->
+  <section id="calculatorPage" class="page">
+    <div class="container">
+      <div class="form-shell">
+        <div class="form-header">
+          <h1>First time buyer mortgage calculator</h1>
+          <p>Complete the 3 steps below to get an estimated borrowing amount.</p>
+        </div>
+
+        <div class="progress">
+          <div class="progress-step active" id="progress1"></div>
+          <div class="progress-step" id="progress2"></div>
+          <div class="progress-step" id="progress3"></div>
+        </div>
+
+        <div class="form-body">
+          <div id="errorMessage" class="error"></div>
+
+          <!-- Step 1 -->
+          <div class="step active" id="step1">
+            <h2>Step 1: About your application</h2>
+            <p class="step-desc">
+              Tell us how many people are applying, your annual income and number of dependants.
+            </p>
+
+            <div class="form-group">
+              <label>Number of applicants</label>
+              <div class="radio-group">
+                <label class="radio-card">
+                  <input type="radio" name="applicants" value="1" checked onchange="toggleApplicantTwo()" />
+                  1 applicant
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="applicants" value="2" onchange="toggleApplicantTwo()" />
+                  2 applicants
+                </label>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="income1">Your annual income before tax (£)</label>
+                <input type="number" id="income1" placeholder="Example: 45000" />
+                <p class="hint">Include guaranteed overtime, bonus, commission or other regular income.</p>
+              </div>
+
+              <div class="form-group hidden" id="applicantTwoIncome">
+                <label for="income2">Second applicant annual income before tax (£)</label>
+                <input type="number" id="income2" placeholder="Example: 35000" />
+              </div>
+
+              <div class="form-group">
+                <label for="dependants">Number of dependants</label>
+                <input type="number" id="dependants" placeholder="Example: 0" min="0" />
+                <p class="hint">A dependant is someone you financially support.</p>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="goLanding()">Back</button>
+              <button class="btn btn-primary" onclick="nextStep(1)">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="step" id="step2">
+            <h2>Step 2: Monthly commitments</h2>
+            <p class="step-desc">
+              Add regular financial commitments so the estimate can consider affordability.
+            </p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="loanRepayments">Total monthly loan repayments (£)</label>
+                <input type="number" id="loanRepayments" placeholder="Example: 250" />
+                <p class="hint">Include unsecured loans, car loans or personal loans.</p>
+              </div>
+
+              <div class="form-group">
+                <label for="creditCards">Credit card balance after last repayment (£)</label>
+                <input type="number" id="creditCards" placeholder="Example: 1200" />
+                <p class="hint">This field is optional. Enter 0 if not applicable.</p>
+              </div>
+
+              <div class="form-group">
+                <label for="monthlyExpenditure">Other monthly expenditure (£)</label>
+                <input type="number" id="monthlyExpenditure" placeholder="Example: 400" />
+                <p class="hint">Include regular costs like childcare, pension contributions or ground rent.</p>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="previousStep(2)">Back</button>
+              <button class="btn btn-primary" onclick="nextStep(2)">Continue</button>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="step" id="step3">
+            <h2>Step 3: Deposit and mortgage term</h2>
+            <p class="step-desc">
+              Tell us your available deposit and how long you want to borrow for.
+            </p>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="deposit">Deposit amount (£)</label>
+                <input type="number" id="deposit" placeholder="Example: 25000" />
+                <p class="hint">This is the money you already have towards the property.</p>
+              </div>
+
+              <div class="form-group">
+                <label for="term">Length of term</label>
+                <select id="term"></select>
+                <p class="hint">Options are from 3 years to 48 years.</p>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="previousStep(3)">Back</button>
+              <button class="btn btn-primary" onclick="calculateResult()">See your result</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Page -->
+  <section id="resultsPage" class="page">
+    <div class="container">
+      <div class="result-card">
+        <h1 class="result-title">Your estimated mortgage result</h1>
+        <p class="result-summary">
+          Based on the details entered, here is an estimated amount you may be able to borrow.
+        </p>
+
+        <div class="result-grid">
+          <div class="result-box">
+            <span>Estimated borrowing amount</span>
+            <strong id="borrowAmount">£0</strong>
+          </div>
+
+          <div class="result-box">
+            <span>Estimated property budget</span>
+            <strong id="propertyBudget">£0</strong>
+          </div>
+
+          <div class="result-box">
+            <span>Estimated monthly repayment</span>
+            <strong id="monthlyPayment">£0</strong>
+          </div>
+        </div>
+
+        <div class="notice">
+          This is only an indicative estimate. A real mortgage decision may consider credit history,
+          employment type, lender rules, interest rates, affordability checks and property details.
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="editDetails()">Edit details</button>
+          <button class="btn btn-primary" onclick="restartTool()">Start again</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    let currentStep = 1;
+
+    document.addEventListener("DOMContentLoaded", function () {
+      loadTermOptions();
+    });
+
+    function loadTermOptions() {
+      const termSelect = document.getElementById("term");
+      termSelect.innerHTML = "";
+
+      for (let year = 3; year <= 48; year++) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year + (year === 1 ? " year" : " years");
+
+        if (year === 25) {
+          option.selected = true;
+        }
+
+        termSelect.appendChild(option);
+      }
+    }
+
+    function startCalculator() {
+      document.getElementById("landingPage").classList.remove("active");
+      document.getElementById("calculatorPage").classList.add("active");
+      showStep(1);
+    }
+
+    function goLanding() {
+      document.getElementById("calculatorPage").classList.remove("active");
+      document.getElementById("landingPage").classList.add("active");
+      hideError();
+    }
+
+    function toggleApplicantTwo() {
+      const applicants = document.querySelector('input[name="applicants"]:checked').value;
+      const applicantTwoIncome = document.getElementById("applicantTwoIncome");
+
+      if (applicants === "2") {
+        applicantTwoIncome.classList.remove("hidden");
+      } else {
+        applicantTwoIncome.classList.add("hidden");
+        document.getElementById("income2").value = "";
+      }
+    }
+
+    function showStep(stepNumber) {
+      currentStep = stepNumber;
+
+      document.querySelectorAll(".step").forEach(step => {
+        step.classList.remove("active");
+      });
+
+      document.getElementById("step" + stepNumber).classList.add("active");
+
+      for (let i = 1; i <= 3; i++) {
+        const progress = document.getElementById("progress" + i);
+        if (i <= stepNumber) {
+          progress.classList.add("active");
+        } else {
+          progress.classList.remove("active");
+        }
+      }
+
+      hideError();
+    }
+
+    function nextStep(stepNumber) {
+      if (!validateStep(stepNumber)) {
+        return;
+      }
+
+      showStep(stepNumber + 1);
+    }
+
+    function previousStep(stepNumber) {
+      showStep(stepNumber - 1);
+    }
+
+    function validateStep(stepNumber) {
+      hideError();
+
+      if (stepNumber === 1) {
+        const applicants = document.querySelector('input[name="applicants"]:checked').value;
+        const income1 = getNumber("income1");
+        const income2 = getNumber("income2");
+        const dependants = getNumber("dependants");
+
+        if (income1 <= 0) {
+          showError("Please enter your annual income.");
+          return false;
+        }
+
+        if (applicants === "2" && income2 <= 0) {
+          showError("Please enter the second applicant annual income.");
+          return false;
+        }
+
+        if (dependants < 0) {
+          showError("Dependants cannot be negative.");
+          return false;
+        }
+      }
+
+      if (stepNumber === 2) {
+        const loanRepayments = getNumber("loanRepayments");
+        const creditCards = getNumber("creditCards");
+        const monthlyExpenditure = getNumber("monthlyExpenditure");
+
+        if (loanRepayments < 0 || creditCards < 0 || monthlyExpenditure < 0) {
+          showError("Monthly commitments cannot be negative.");
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    function calculateResult() {
+      hideError();
+
+      const deposit = getNumber("deposit");
+      const term = getNumber("term");
+
+      if (deposit <= 0) {
+        showError("Please enter your deposit amount.");
+        return;
+      }
+
+      if (term < 3 || term > 48) {
+        showError("Please select a mortgage term between 3 and 48 years.");
+        return;
+      }
+
+      const applicants = document.querySelector('input[name="applicants"]:checked').value;
+      const income1 = getNumber("income1");
+      const income2 = applicants === "2" ? getNumber("income2") : 0;
+      const dependants = getNumber("dependants");
+
+      const loanRepayments = getNumber("loanRepayments");
+      const creditCards = getNumber("creditCards");
+      const monthlyExpenditure = getNumber("monthlyExpenditure");
+
+      const totalIncome = income1 + income2;
+      const totalMonthlyCommitments = loanRepayments + monthlyExpenditure + (creditCards * 0.03);
+
+      /*
+        Sample estimate logic:
+        - Base borrowing = income x 4.5
+        - Reduce borrowing based on commitments and dependants
+        - This is only indicative, not a lender decision engine
+      */
+      const baseBorrowing = totalIncome * 4.5;
+      const commitmentReduction = totalMonthlyCommitments * 12 * 3;
+      const dependantReduction = dependants * 12000;
+
+      let estimatedBorrowing = baseBorrowing - commitmentReduction - dependantReduction;
+
+      if (estimatedBorrowing < 0) {
+        estimatedBorrowing = 0;
+      }
+
+      const propertyBudget = estimatedBorrowing + deposit;
+
+      /*
+        Monthly repayment estimate using fixed sample annual rate.
+        You can change this value later or make it dynamic.
+      */
+      const annualInterestRate = 5.25;
+      const monthlyRate = annualInterestRate / 100 / 12;
+      const numberOfPayments = term * 12;
+
+      let monthlyPayment = 0;
+
+      if (estimatedBorrowing > 0) {
+        monthlyPayment =
+          estimatedBorrowing *
+          (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+          (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+      }
+
+      document.getElementById("borrowAmount").textContent = formatCurrency(estimatedBorrowing);
+      document.getElementById("propertyBudget").textContent = formatCurrency(propertyBudget);
+      document.getElementById("monthlyPayment").textContent = formatCurrency(monthlyPayment);
+
+      document.getElementById("calculatorPage").classList.remove("active");
+      document.getElementById("resultsPage").classList.add("active");
+    }
+
+    function editDetails() {
+      document.getElementById("resultsPage").classList.remove("active");
+      document.getElementById("calculatorPage").classList.add("active");
+      showStep(3);
+    }
+
+    function restartTool() {
+      document.querySelectorAll("input[type='number']").forEach(input => {
+        input.value = "";
+      });
+
+      document.querySelector('input[name="applicants"][value="1"]').checked = true;
+      toggleApplicantTwo();
+      loadTermOptions();
+
+      document.getElementById("resultsPage").classList.remove("active");
+      document.getElementById("landingPage").classList.add("active");
+
+      currentStep = 1;
+      hideError();
+    }
+
+    function getNumber(id) {
+      const value = document.getElementById(id).value;
+      return value === "" ? 0 : Number(value);
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat("en-GB", {
+        style: "currency",
+        currency: "GBP",
+        maximumFractionDigits: 0
+      }).format(amount);
+    }
+
+    function showError(message) {
+      const errorBox = document.getElementById("errorMessage");
+      errorBox.textContent = message;
+      errorBox.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function hideError() {
+      const errorBox = document.getElementById("errorMessage");
+      errorBox.textContent = "";
+      errorBox.style.display = "none";
+    }
+  </script>
+</body>
+</html>
